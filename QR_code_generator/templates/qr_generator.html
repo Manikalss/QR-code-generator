@@ -9,13 +9,13 @@
     <h1>QR Code Generator</h1>
     
     <form action="/" method="GET">
-    <input name="url" placeholder="enter a url" required>
+    <input name="url" placeholder="enter a url" maxlength="900" required>
     <button type="submit">Enter</button>
     </form>
     
-
-    <img src="/static/qrcode.png?v={{ v }}" alt="QR Code" style="max-width: 400px;">
-    
+    {% if qr64 %}
+    <img src="data:image/png;base64,{{ qr64 }}" alt="Your QR Code">
+    {% endif %}
     
 </body>
 </html>

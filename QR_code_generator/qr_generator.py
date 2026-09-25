@@ -1,30 +1,20 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from pathlib import Path
-import qrcode, os, random
+import qrcode, os
+import io, base64
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def main(request: Request, url = None):
     
-    random_version = random.randint(1, 10000)
-    fullpath = Path.cwd()
-    pathpng = f"{fullpath}/static/qrcode.png"
+    qr64 = ""
     
-    if os.path.exists(pathpng):
-        os.remove(pathpng)
-
-    
-    if url is not None:
+    if url and len(url) < 901:
         qr = qrcode.QRCode(
-        version=1,  
         error_correction=qrcode.constants.ERROR_CORRECT_H,  
         box_size=10,  
         border=4
@@ -33,10 +23,12 @@ def main(request: Request, url = None):
         qr.add_data(url)
         qr.make(fit=True)
         qr_image = qr.make_image(fill_color="black", back_color="white")
-        qr_image.save(pathpng)
-
         
-    urlrecieve = {"url": url, "v": random_version, "path": pathpng}
+        bt = io.BytesIO()
+        qr_image.save(bt, format="PNG")
+        qr64 = base64.b64encode(bt.getvalue()).decode("utf-8")
+        
+    urlrecieve = {"url": url, "qr64": qr64}
     
     return templates.TemplateResponse(
         request=request,
